@@ -118,46 +118,46 @@ public class Biblioteca {
 		return dataAtual;
 	}
 	
-	public void emprestarLivro (Usuario u, Livro lv) throws NumeroDeLivrosEmprestadosException, UsuarioEmAtrasoException, QuantidadeDeLivrosInsuficienteException, ListaDeAtrasoInexistenteException{
-		if (u.getEmprestimos().size() == 3){
-			throw new NumeroDeLivrosEmprestadosException ("Usu�rio atingiu limite de emprestimos");
+	public void emprestarLivro (Usuario usuario, Livro livro) throws MaximoDeLivrosEmprestadosException, UsuarioEmAtrasoException, QuantidadeDeLivrosInsuficienteException, ListaDeAtrasoInexistenteException{
+		
+		int quantidadeMaxEmprestimos = 3;
+		if (usuario.getEmprestimos().size() == quantidadeMaxEmprestimos){
+			throw new MaximoDeLivrosEmprestadosException ("Usuário atingiu limite de emprestimos");
 		}
-		for (Emprestimo e: this.listarEmprestimosEmAtraso()){
-			if (e.getUsuario().equals(u)){
-				throw new UsuarioEmAtrasoException ("O Caboclo est� devendo, cobre ao danado!");
-			}
+		if(this.listarEmprestimosEmAtraso().contains(usuario)){
+			throw new UsuarioEmAtrasoException("O usuário está com devolução em atraso.");
 		}
 		for (Livro l: this.livros){
-			if (l.getCodigo().equals(lv.getCodigo()) && l.getQuantidade() == 1){
-				throw new QuantidadeDeLivrosInsuficienteException("Quantidade de livros insuficientes para emprestimo.");
+			if (l.getCodigo().equals(livro.getCodigo()) && l.getQuantidade() == 1){
+				throw new QuantidadeDeLivrosInsuficienteException("Quantidade de livros insuficiente para emprestimo.");
 			}
 		}
 		
 		Calendar diaDevolucao = Calendar.getInstance();
-		diaDevolucao.add(Calendar.DAY_OF_YEAR, u.getQuantDiasEmprestimo());
-		Emprestimo e = new Emprestimo (u, lv, Calendar.getInstance(), diaDevolucao);
-		for (Livro livro: this.livros){
-			if (livro.getCodigo().equals(lv.getCodigo())){
+		diaDevolucao.add(Calendar.DAY_OF_YEAR, usuario.getQuantDiasEmprestimo());  
+		Emprestimo novoEmprestimo = new Emprestimo (usuario, livro, Calendar.getInstance(), diaDevolucao);
+		for (Livro lv: this.livros){
+			if (lv.getCodigo().equals(livro.getCodigo())){
 				lv.setQuantidade(lv.getQuantidade()-1);
 			}
 		}
-		this.emprestimosAtivos.add(e);
-		u.adicionarEmprestimo(e);		
+		this.emprestimosAtivos.add(novoEmprestimo);
+		usuario.adicionarEmprestimo(novoEmprestimo);		
 			
 	}
 	
-	public void devolverLivro (Usuario u, Livro lv)throws EmprestimoInexistenteException{
+	public void devolverLivro (Usuario usuario, Livro livro)throws EmprestimoInexistenteException{
 		boolean emprestou = false;
-		for (Emprestimo el: u.getEmprestimos()){
-			if (el.getLivro().equals(lv)){
-				for (Emprestimo el2: this.emprestimosAtivos){
-					if (el2.getLivro().equals(lv) && el2.getUsuario().equals(u)){
-						this.emprestimosAtivos.remove(el2);
-						u.getEmprestimos().remove(el2);
+		for (Emprestimo emprestimo1: usuario.getEmprestimos()){
+			if (emprestimo1.getLivro().getCodigo().equals(livro.getCodigo())){
+				for (Emprestimo emprestimo2: this.emprestimosAtivos){
+					if (emprestimo2.getLivro().getCodigo().equals(livro.getCodigo()) && emprestimo2.getUsuario().getMatricula().equals(usuario.getMatricula())){
+						this.emprestimosAtivos.remove(emprestimo2);
+						usuario.getEmprestimos().remove(emprestimo2);
 						emprestou = true;
-						for (Livro livro : this.livros){
-							if (livro.getCodigo().equals(lv.getCodigo())){
-								livro.setQuantidade(livro.getQuantidade()+1);
+						for (Livro lv : this.livros){
+							if (lv.getCodigo().equals(livro.getCodigo())){
+								lv.setQuantidade(lv.getQuantidade()+1);
 							}
 						}
 					}
@@ -165,7 +165,7 @@ public class Biblioteca {
 			}
 		}
 		if (emprestou == false){
-			throw new EmprestimoInexistenteException ("O usu�rio n�o possui o emprestimo refer�nte.");
+			throw new EmprestimoInexistenteException ("O usuário não possui o emprestimo referente.");
 		}
 		
 	}
