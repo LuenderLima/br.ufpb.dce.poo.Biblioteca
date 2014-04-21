@@ -304,7 +304,7 @@ public class Biblioteca {
 	public void gravarEmprestimosEmArquivo(String nomeArquivo) throws IOException {
 		BufferedWriter gravador = null;
 		try {
-			gravador = new BufferedWriter(new FileWriter("C:\\date\\datas.txt"));
+			gravador = new BufferedWriter(new FileWriter(nomeArquivo));
 			for (Emprestimo e: this.emprestimosAtivos){
 				gravador.write(e.getUsuario().getMatricula() +"\n");
 				gravador.write(e.getLivro().getCodigo() +"\n");
