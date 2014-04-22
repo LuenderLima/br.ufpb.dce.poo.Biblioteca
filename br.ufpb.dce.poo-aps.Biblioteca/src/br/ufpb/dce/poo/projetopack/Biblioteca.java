@@ -111,8 +111,10 @@ public class Biblioteca {
 		if (usuario.getEmprestimos().size() == quantidadeMaxEmprestimo){
 			throw new MaximoDeLivrosEmprestadosException ("Usuario atingiu limite de emprestimos");
 		}
-		if(this.listarEmprestimosEmAtraso().contains(usuario)){
-			throw new UsuarioEmAtrasoException("O usuario esta com devoluçao em atraso.");
+		for(Emprestimo e: this.listarEmprestimosEmAtraso()){
+			if(e.getUsuario().getMatricula().equals(usuario.getMatricula())){
+				throw new UsuarioEmAtrasoException("O usuário está com devolução em atraso.");
+			}
 		}
 		for (Livro l: this.livros){
 			if (l.getCodigo().equals(livro.getCodigo()) && l.getQuantidade() == 1){
@@ -121,7 +123,7 @@ public class Biblioteca {
 		}
 		
 		Calendar diaDevolucao = Calendar.getInstance();
-		diaDevolucao.add(Calendar.DAY_OF_YEAR, usuario.getQuantDiasEmprestimo());
+		diaDevolucao.add(Calendar.DAY_OF_MONTH, usuario.getQuantDiasEmprestimo());
 		Emprestimo novoEmprestimo = new Emprestimo (usuario, livro, Calendar.getInstance(), diaDevolucao);
 		for (Livro lv: this.livros){
 			if (lv.getCodigo().equals(livro.getCodigo())){
