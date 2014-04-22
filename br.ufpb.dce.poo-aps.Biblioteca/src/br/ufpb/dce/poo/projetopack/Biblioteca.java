@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Calendar;
+
 import br.ufpb.dce.poo.ExceptionsProject.*;
 
 public class Biblioteca {
@@ -32,8 +33,10 @@ public class Biblioteca {
 	}
 	
 	public void cadastrarUsuario (Usuario u) throws UsuarioJaExisteException{
-		if(this.usuarios.contains(u)){
-			throw new UsuarioJaExisteException ("O usuario ja existe");
+		for (Usuario usuario: this.usuarios){
+			if (usuario.getMatricula().equals(u.getMatricula())){
+				throw new UsuarioJaExisteException ("Este usuário já existe.");
+			}
 		}
 		this.usuarios.add(u);
 	}
@@ -55,11 +58,12 @@ public class Biblioteca {
 				return u;
 			}
 		}
-		throw new UsuarioInexistenteException ("Este usuario não existe.");
+		throw new UsuarioInexistenteException ("Este usuario nÃ£o existe.");
 	}
 	
 	public Livro getLivro (String codLivro) throws LivroInexistenteException{
-		for (Livro l: livros){
+		for (Livro l: this.livros){
+			System.out.println();
 			if(l.getCodigo().equals(codLivro)){
 				return l;
 			}
@@ -105,15 +109,15 @@ public class Biblioteca {
 		
 	}
 	
-	public void emprestarLivro (Usuario usuario, Livro livro) throws MaximoDeLivrosEmprestadosException, UsuarioEmAtrasoException, QuantidadeDeLivrosInsuficienteException, ListaDeAtrasoInexistenteException{
+	public void emprestarLivro (Usuario usuario, Livro livro) throws MaximoDeLivrosEmprestadosException, UsuarioEmAtrasoException, QuantidadeDeLivrosInsuficienteException{
 		
 		int quantidadeMaxEmprestimo = 3;
 		if (usuario.getEmprestimos().size() == quantidadeMaxEmprestimo){
 			throw new MaximoDeLivrosEmprestadosException ("Usuario atingiu limite de emprestimos");
 		}
-		for(Emprestimo e: this.listarEmprestimosEmAtraso()){
-			if(e.getUsuario().getMatricula().equals(usuario.getMatricula())){
-				throw new UsuarioEmAtrasoException("O usuário está com devolução em atraso.");
+		for (Emprestimo e: this.listarEmprestimosEmAtraso()){
+			if (e.getUsuario().getMatricula().equals(usuario.getMatricula())){
+				throw new UsuarioEmAtrasoException ("Usuário está em débito com a biblioteca");
 			}
 		}
 		for (Livro l: this.livros){
@@ -142,7 +146,7 @@ public class Biblioteca {
 				for (Emprestimo emprestimoBiblioteca: this.emprestimosAtivos){
 					if (emprestimoBiblioteca.getLivro().getCodigo().equals(livro.getCodigo()) && emprestimoBiblioteca.getUsuario().getMatricula().equals(usuario.getMatricula())){
 						this.emprestimosAtivos.remove(emprestimoBiblioteca);
-						usuario.getEmprestimos().remove(emprestimoBiblioteca);
+						usuario.getEmprestimos().remove(emprestimoUsuario);
 						emprestou = true;
 						for (Livro lv : this.livros){
 							if (lv.getCodigo().equals(livro.getCodigo())){
@@ -214,15 +218,15 @@ public class Biblioteca {
 				if(nomeAluno != null){
 					String matricula = leitorAluno.readLine();
 					String cpf = leitorAluno.readLine();
-					String curso = leitorAluno.readLine();
 					String periodoIngresso = leitorAluno.readLine();
+					String curso = leitorAluno.readLine();
 					Usuario u = new Aluno(nomeAluno, matricula, cpf, curso, periodoIngresso);
 					this.cadastrarUsuario(u);
 				}
 			}while(nomeAluno != null);
 		}
 		finally{
-			if(leitorAluno == null){
+			if(leitorAluno != null){
 				leitorAluno.close();
 			}
 		}
@@ -246,7 +250,7 @@ public class Biblioteca {
 			} while(nomeProfessor != null); 
 			
 		} finally{ 
-			if(leitorProfessor!=null){ 
+			if(leitorProfessor != null){ 
 				leitorProfessor.close(); 
 			} 
 		} 
@@ -266,7 +270,7 @@ public class Biblioteca {
 				gravadorLivro.newLine();
 				gravadorLivro.write(l.getClassificacao());
 				gravadorLivro.newLine();
-				gravadorLivro.write(l.getQuantidade());
+				gravadorLivro.write(Integer.toString(l.getQuantidade()));
 				gravadorLivro.newLine();
 			}		
 		}
@@ -290,8 +294,9 @@ public class Biblioteca {
 					String codigo = leitor.readLine(); 
 					String autor = leitor.readLine(); 
 					String classificacao = leitor.readLine(); 
-					int quantidade = leitor.read(); 
-					Livro l = new Livro (nomeDoLivro, autor, codigo, quantidade,classificacao); 
+					int quantidade = Integer.parseInt(leitor.readLine());
+					
+					Livro l = new Livro (nomeDoLivro, codigo, autor,quantidade,classificacao); 
 					this.cadastrarLivro(l); 
 				} 
 			} while (nomeDoLivro!= null); 
@@ -308,16 +313,24 @@ public class Biblioteca {
 		try {
 			gravador = new BufferedWriter(new FileWriter(nomeArquivo));
 			for (Emprestimo e: this.emprestimosAtivos){
-				gravador.write(e.getUsuario().getMatricula() +"\n");
-				gravador.write(e.getLivro().getCodigo() +"\n");
+				gravador.write(e.getUsuario().getMatricula());
+				gravador.newLine();
+				gravador.write(e.getLivro().getCodigo());
+				gravador.newLine();
 				
-				gravador.write(e.getDataEmprestimo().get(Calendar.DAY_OF_MONTH)+"\n");
-				gravador.write(e.getDataEmprestimo().get(Calendar.MONTH) +"\n");
-				gravador.write(e.getDataEmprestimo().get(Calendar.YEAR) +"\n");
+				gravador.write(Integer.toString(e.getDataEmprestimo().get(Calendar.DAY_OF_MONTH)));
+				gravador.newLine();
+				gravador.write(Integer.toString(e.getDataEmprestimo().get(Calendar.MONTH)));;
+				gravador.newLine();
+				gravador.write(Integer.toString(e.getDataEmprestimo().get(Calendar.YEAR)));
+				gravador.newLine();
 				
-				gravador.write(e.getDataDevolucao().get(Calendar.DAY_OF_MONTH) +"\n");
-				gravador.write(e.getDataDevolucao().get(Calendar.MONTH) +"\n");
-				gravador.write(e.getDataDevolucao().get(Calendar.YEAR) +"\n");
+				gravador.write(Integer.toString(e.getDataDevolucao().get(Calendar.DAY_OF_MONTH)));
+				gravador.newLine();
+				gravador.write(Integer.toString(e.getDataDevolucao().get(Calendar.MONTH)));
+				gravador.newLine();
+				gravador.write(Integer.toString(e.getDataDevolucao().get(Calendar.YEAR)));
+				gravador.newLine();
 			}
 		} finally {
 			if (gravador!=null){
@@ -343,30 +356,35 @@ public class Biblioteca {
 			
 			
 			do {
-				matricula = leitor.readLine(); 
-				codigoLivro = leitor.readLine();
+				matricula = leitor.readLine();
+				if (matricula != null){
+					codigoLivro = leitor.readLine();
+					
+					diaEmprestimo = leitor.readLine();
+					mesEmprestimo = leitor.readLine();
+					anoEmprestimo = leitor.readLine();
+					
+					diaDevolucao = leitor.readLine();
+					mesDevolucao = leitor.readLine();
+					anoDevolucao = leitor.readLine();
+					
+					
+					
+					Usuario usuario = this.getUsuario(matricula);
+					Livro livro = this.getLivro(codigoLivro);
+					
+					Calendar dataEmprestimo = Calendar.getInstance();
+					dataEmprestimo.set(Integer.parseInt(anoEmprestimo),Integer.parseInt(mesEmprestimo),Integer.parseInt(diaEmprestimo));
+					
+					Calendar dataDevolucao = Calendar.getInstance();
+					dataDevolucao.set(Integer.parseInt(anoDevolucao), Integer.parseInt(mesDevolucao), Integer.parseInt(diaDevolucao));
+					
+					Emprestimo emprestimo = new Emprestimo(usuario, livro, dataEmprestimo, dataDevolucao);
+					
+					usuario.adicionarEmprestimo(emprestimo);
+					this.emprestimosAtivos.add(emprestimo);
+				}
 				
-				diaEmprestimo = leitor.readLine();
-				mesEmprestimo = leitor.readLine();
-				anoEmprestimo = leitor.readLine();
-				
-				diaDevolucao = leitor.readLine();
-				mesDevolucao = leitor.readLine();
-				anoDevolucao = leitor.readLine();
-				
-				Usuario usuario = this.getUsuario(matricula); 
-				Livro livro = this.getLivro(codigoLivro); 
-				
-				Calendar dataEmprestimo = Calendar.getInstance();
-				dataEmprestimo.set(Integer.parseInt(diaEmprestimo),Integer.parseInt(mesEmprestimo) , Integer.parseInt(anoEmprestimo));
-				
-				Calendar dataDevolucao = Calendar.getInstance();
-				dataDevolucao.set(Integer.parseInt(anoDevolucao), Integer.parseInt(mesDevolucao), Integer.parseInt(diaDevolucao));
-				
-				Emprestimo emprestimo = new Emprestimo(usuario, livro, dataEmprestimo, dataDevolucao);
-				
-				usuario.adicionarEmprestimo(emprestimo);
-				this.emprestimosAtivos.add(emprestimo);
 				
 			} 
 			while(matricula != null); 
@@ -379,11 +397,55 @@ public class Biblioteca {
 		
 	}
 
-
-
-
+public static void main(String[] args) throws IOException, UsuarioJaExisteException, EmprestimoJaExisteException, UsuarioInexistenteException, LivroInexistenteException, EmprestimoInexistenteException, MaximoDeLivrosEmprestadosException, UsuarioEmAtrasoException, QuantidadeDeLivrosInsuficienteException {
+	Biblioteca biblioteca = Biblioteca.getInstance();
+	
+	biblioteca.cadastrarLivro(new Livro ("Java", "2345", "Martin", 10, "Programacao"));
+	biblioteca.cadastrarUsuario(new Aluno ("Odravison", "12345", "12345678901", "Sistema de informação", "2013.1"));
+	biblioteca.cadastrarUsuario(new Professor ("Ayla", "1234","12345678901","DCE" ));
+	biblioteca.emprestarLivro(biblioteca.getUsuario("12345"), biblioteca.getLivro("2345"));
+	biblioteca.emprestarLivro(biblioteca.getUsuario("1234"), biblioteca.getLivro("2345"));
+	
+	
+	biblioteca.gravarEmprestimosEmArquivo("Emprestimos.txt");
+	biblioteca.gravarLivrosEmArquivo("Livros.txt");
+	biblioteca.gravarUsuariosEmAquivo("Alunos.txt", "Professores.txt");
+	
+//	biblioteca.carregarLivrosDeArquivo("Livros.txt");
+//	biblioteca.carregarProfessoresDeArquivo("Professores.txt");
+//	biblioteca.carregarAlunosDeArquivo("Alunos.txt");
+//	biblioteca.carregarEmprestimosDeArquivo("Emprestimos.txt");
+	
+	System.out.println(biblioteca.getLivro("2345").getNome());
+	System.out.println(biblioteca.getLivro("2345").getAutor());
+	System.out.println(biblioteca.getLivro("2345").getClassificacao());
+	System.out.println("Quantidade do livro: " + biblioteca.getLivro("2345").getQuantidade());
+	
+	System.out.println(biblioteca.getUsuario("12345").getNome());
+	System.out.println(biblioteca.getUsuario("12345").getCPF());
+	System.out.println(biblioteca.getUsuario("12345").getMatricula());
+	System.out.println(biblioteca.getUsuario("12345").getCurso());
+	
+	System.out.println(biblioteca.getUsuario("1234").getNome());
+	System.out.println(biblioteca.getUsuario("1234").getDepartamento());
+	System.out.println(biblioteca.getUsuario("1234").getCPF());
+	System.out.println(biblioteca.getUsuario("1234").getMatricula());
+	
+	for (Usuario u: biblioteca.usuarios){
+		
+		for(Emprestimo e: u.getEmprestimos()){
+			System.out.println(e.getDataEmprestimo().getTime());
+			System.out.println(e.getDataDevolucao().getTime());
+		}
+	}
+	
+	System.out.println(biblioteca.getLivro("2345").getQuantidade());
+	biblioteca.devolverLivro(biblioteca.getUsuario("12345"),biblioteca.getLivro("2345"));
+	System.out.println(biblioteca.getLivro("2345").getQuantidade());
+	biblioteca.devolverLivro(biblioteca.getUsuario("1234"),biblioteca.getLivro("2345"));
+	
+	System.out.println(biblioteca.getLivro("2345").getQuantidade());
 	
 }
 
-
-
+}
