@@ -28,7 +28,7 @@ public class Livro {
 	}
 
 	public void setQuantidade(int quant) {
-		this.quantidade = quantidade + quant;
+		this.quantidade = quant;
 	}
 	
 	public String getAutor() {
